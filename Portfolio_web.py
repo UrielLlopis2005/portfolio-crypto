@@ -11,14 +11,30 @@ st.set_page_config(page_title="Crypto Tracker", page_icon="🚀", layout="wide")
 
 # 2. CONEXIÓN DIRECTA (Usando la caja fuerte de Streamlit)
 try:
-    # Ahora lee las claves ocultas en la nube
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
     
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
-    # Restaurar la sesión para no perder el login
-    if 'access_token' in st.session_state and 'refresh_token' in st.session_state:
+    # --- NUEVO: EL MOSTRADOR DE RECEPCIÓN DE GOOGLE ---
+    # Si volvemos de Google, la URL traerá un parámetro llamado "code"
+    if "code" in st.query_params:
+        codigo_google = st.query_params["code"]
+        
+        # Cambiamos ese código por la sesión real del usuario
+        respuesta = supabase.auth.exchange_code_for_session(codigo_google)
+        
+        # Guardamos al usuario para que la web sepa que ha entrado
+        st.session_state['usuario'] = respuesta.user
+        st.session_state['access_token'] = respuesta.session.access_token
+        st.session_state['refresh_token'] = respuesta.session.refresh_token
+        
+        # Limpiamos la URL para dejarla bonita y sin códigos raros
+        st.query_params.clear()
+    # ---------------------------------------------------
+
+    # Restaurar la sesión para los que ya habían entrado con email/contraseña
+    elif 'access_token' in st.session_state and 'refresh_token' in st.session_state:
         supabase.auth.set_session(st.session_state['access_token'], st.session_state['refresh_token'])
         
     conexion_exitosa = True
