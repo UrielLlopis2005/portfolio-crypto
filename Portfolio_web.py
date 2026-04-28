@@ -43,14 +43,35 @@ if st.session_state['usuario'] is None:
     tab_login, tab_registro = st.tabs(["Iniciar Sesión", "Crear Cuenta nueva"])
     
     with tab_login:
+        # --- 1. BOTÓN DE GOOGLE ---
+        # ⚠️ IMPORTANTE: Cambia "TU_URL" por el enlace real de tu web en Streamlit Cloud
+        # Ejemplo: "https://mi-portfolio-crypto.streamlit.app"
+        url_retorno = "https://portfoliocripto.streamlit.app" 
+        
+        if st.button("🚀 Continuar con Google", use_container_width=True):
+            try:
+                auth_url = supabase.auth.sign_in_with_oauth({
+                    "provider": "google",
+                    "options": {
+                        "redirect_to": url_retorno
+                    }
+                })
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url.url}">', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error conectando con Google: {e}")
+
+        st.markdown("<p style='text-align: center; color: gray;'>— o —</p>", unsafe_allow_html=True)
+        
+        # --- 2. LOGIN TRADICIONAL CON EMAIL ---
         email_login = st.text_input("Email", key="log_email")
         pass_login = st.text_input("Contraseña", type="password", key="log_pass")
+        
         if st.button("Entrar"):
             try:
                 respuesta = supabase.auth.sign_in_with_password({"email": email_login, "password": pass_login})
                 st.session_state['usuario'] = respuesta.user
                 
-                # --- NUEVO: GUARDAR LOS TOKENS ---
+                # Guardar los tokens
                 st.session_state['access_token'] = respuesta.session.access_token
                 st.session_state['refresh_token'] = respuesta.session.refresh_token
                 
