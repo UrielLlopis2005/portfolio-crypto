@@ -38,58 +38,74 @@ def cerrar_sesion():
 
 # Si no hay usuario logueado, mostramos el formulario y DETENEMOS la app
 if st.session_state['usuario'] is None:
-    st.title("🔐 Acceso al Portfolio Crypto")
     
-    tab_login, tab_registro = st.tabs(["Iniciar Sesión", "Crear Cuenta nueva"])
+    # --- NUEVO DISEÑO: PANTALLA DIVIDIDA ---
+    # col_izq ocupa un poco menos (1) y col_der un poco más (1.2)
+    col_izq, col_der = st.columns([1, 1.2], gap="large")
     
-    with tab_login:
-        # --- 1. BOTÓN DE GOOGLE ---
-        # ⚠️ IMPORTANTE: Cambia "TU_URL" por el enlace real de tu web en Streamlit Cloud
-        # Ejemplo: "https://mi-portfolio-crypto.streamlit.app"
-        url_retorno = "https://portfoliocripto.streamlit.app" 
+    with col_izq:
+        st.markdown("<br><br>", unsafe_allow_html=True) # Espacio para centrar verticalmente
+        st.title("Inicia sesión")
         
-        if st.button("🚀 Continuar con Google", use_container_width=True):
-            try:
-                auth_url = supabase.auth.sign_in_with_oauth({
-                    "provider": "google",
-                    "options": {
-                        "redirect_to": url_retorno
-                    }
-                })
-                st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url.url}">', unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Error conectando con Google: {e}")
+        # 1. Fila de botones sociales (Iconos cuadrados simulados)
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.button("📘", use_container_width=True, disabled=True, help="Facebook (Próximamente)")
+        with c2:
+            # ⚠️ IMPORTANTE: Pon aquí tu URL real de Streamlit
+            url_retorno = "TU_URL_DE_STREAMLIT_AQUI" 
+            if st.button("🇬", use_container_width=True, help="Continuar con Google"):
+                try:
+                    auth_url = supabase.auth.sign_in_with_oauth({
+                        "provider": "google",
+                        "options": {"redirect_to": url_retorno}
+                    })
+                    st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url.url}">', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error conectando con Google: {e}")
+        with c3:
+            st.button("🍎", use_container_width=True, disabled=True, help="Apple (Próximamente)")
+        with c4:
+            st.button("👾", use_container_width=True, disabled=True, help="Discord (Próximamente)")
 
         st.markdown("<p style='text-align: center; color: gray;'>— o —</p>", unsafe_allow_html=True)
         
-        # --- 2. LOGIN TRADICIONAL CON EMAIL ---
-        email_login = st.text_input("Email", key="log_email")
-        pass_login = st.text_input("Contraseña", type="password", key="log_pass")
+        # 2. Login tradicional (He metido el registro en pestañas limpias)
+        tab_login, tab_registro = st.tabs(["Ingresar", "¿No tienes cuenta? Regístrate"])
         
-        if st.button("Entrar"):
-            try:
-                respuesta = supabase.auth.sign_in_with_password({"email": email_login, "password": pass_login})
-                st.session_state['usuario'] = respuesta.user
-                
-                # Guardar los tokens
-                st.session_state['access_token'] = respuesta.session.access_token
-                st.session_state['refresh_token'] = respuesta.session.refresh_token
-                
-                st.rerun() # Recargamos la página para que entre a la app
-            except Exception as e:
-                st.error("❌ Correo o contraseña incorrectos.")
-                
-    with tab_registro:
-        email_reg = st.text_input("Email", key="reg_email")
-        pass_reg = st.text_input("Contraseña (mín. 6 caracteres)", type="password", key="reg_pass")
-        if st.button("Registrarse"):
-            try:
-                supabase.auth.sign_up({"email": email_reg, "password": pass_reg})
-                st.success("✅ Cuenta creada con éxito. ¡Ve a Iniciar Sesión para entrar!")
-            except Exception as e:
-                st.error(f"❌ Error al crear cuenta: {e}")
-                
-    st.stop() # ¡MAGIA! Esta función evita que se cargue el resto del código si no estás logueado.
+        with tab_login:
+            email_login = st.text_input("Email", key="log_email")
+            pass_login = st.text_input("Contraseña", type="password", key="log_pass")
+            
+            # El type="primary" hace que el botón pille el color principal de la web y destaque
+            if st.button("Iniciar sesión", type="primary", use_container_width=True):
+                try:
+                    respuesta = supabase.auth.sign_in_with_password({"email": email_login, "password": pass_login})
+                    st.session_state['usuario'] = respuesta.user
+                    st.session_state['access_token'] = respuesta.session.access_token
+                    st.session_state['refresh_token'] = respuesta.session.refresh_token
+                    st.rerun()
+                except Exception as e:
+                    st.error("❌ Correo o contraseña incorrectos.")
+                    
+        with tab_registro:
+            email_reg = st.text_input("Nuevo Email", key="reg_email")
+            pass_reg = st.text_input("Contraseña (mín. 6 caracteres)", type="password", key="reg_pass")
+            
+            if st.button("Crear cuenta gratis", use_container_width=True):
+                try:
+                    supabase.auth.sign_up({"email": email_reg, "password": pass_reg})
+                    st.success("✅ Cuenta creada. ¡Ve a la pestaña 'Ingresar' para entrar!")
+                except Exception as e:
+                    st.error(f"❌ Error al crear cuenta: {e}")
+
+    with col_der:
+        # 3. La imagen de la derecha (Puedes cambiar esta URL por la imagen que más te guste)
+        imagen_crypto_url = "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=1000&auto=format&fit=crop"
+        st.image(imagen_crypto_url, use_container_width=True)
+        
+    st.stop() # ¡MAGIA! Esta función evita que se cargue el resto de la app
+# ------------------------------------------
 # ------------------------------------------
 
 # (A partir de aquí, todo tu código original del Menú Lateral y Páginas...)
