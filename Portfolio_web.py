@@ -53,7 +53,7 @@ if st.session_state['usuario'] is None:
             st.button("📘", use_container_width=True, disabled=True, help="Facebook (Próximamente)")
         with c2:
             # ⚠️ IMPORTANTE: Pon aquí tu URL real de Streamlit
-            url_retorno = "TU_URL_DE_STREAMLIT_AQUI" 
+            url_retorno = "https://portfoliocripto.streamlit.app" 
             if st.button("🇬", use_container_width=True, help="Continuar con Google"):
                 try:
                     auth_url = supabase.auth.sign_in_with_oauth({
